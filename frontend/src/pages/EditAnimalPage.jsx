@@ -1020,9 +1020,9 @@ export default function EditAnimalPage() {
                             <SectionLabel style={{ marginBottom: 0 }}>Description <span style={{ color: '#993C1D' }}>*</span></SectionLabel>
                             <button type="button" onClick={handleAiGenerate} disabled={aiLoading}
                                 style={{ fontFamily: sans, fontSize: '11px', fontWeight: 500, background: 'rgba(192,122,74,0.1)', border: '1px solid rgba(192,122,74,0.25)', color: '#8B4E28', borderRadius: '100px', padding: '4px 12px', cursor: aiLoading ? 'default' : 'pointer', opacity: aiLoading ? 0.7 : 1, transition: 'opacity 0.15s' }}>
-                                {aiLoading ? 'Generating...' : aiGenerated ? '✓ Regenerate' : '✨ Generate with AI'}
+                                {aiLoading ? 'Generating...' : aiGenerated ? '🎲 Surprise me again' : '🎲 Surprise me'}
                             </button>
-                            {aiGenerated && <span style={{ fontFamily: sans, fontSize: '10px', color: '#0F6E56' }}>✓ AI-generated — feel free to edit</span>}
+                            {aiGenerated && <span style={{ fontFamily: sans, fontSize: '10px', color: '#0F6E56' }}>✓ Description generated — feel free to edit</span>}
                             {aiError && <span style={{ fontFamily: sans, fontSize: '10px', color: '#993C1D' }}>{aiError}</span>}
                         </div>
                         <textarea

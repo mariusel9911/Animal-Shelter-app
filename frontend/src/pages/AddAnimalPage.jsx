@@ -1141,11 +1141,11 @@ export default function AddAnimalPage() {
                                 opacity: aiLoading ? 0.7 : 1, transition: 'opacity 0.15s',
                             }}
                         >
-                            {aiLoading ? 'Generating...' : aiGenerated ? '✓ Regenerate' : '✨ Generate with AI'}
+                            {aiLoading ? 'Generating...' : aiGenerated ? '🎲 Surprise me again' : '🎲 Surprise me'}
                         </button>
                         {aiGenerated && (
                             <span style={{ fontFamily: sans, fontSize: '10px', color: '#0F6E56' }}>
-                                ✓ AI-generated — feel free to edit
+                                ✓ Description generated — feel free to edit
                             </span>
                         )}
                         {aiError && (
