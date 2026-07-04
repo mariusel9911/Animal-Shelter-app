@@ -206,7 +206,7 @@ export default function PawsHomepage() {
                     color: C.lightMuted,
                     marginBottom: '6px',
                 }}>
-                    {getMastheadDate()} · Timișoara, Romania
+                    {getMastheadDate()}
                 </div>
                 <div style={{
                     fontFamily: serif,
