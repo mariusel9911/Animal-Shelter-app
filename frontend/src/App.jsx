@@ -43,8 +43,10 @@ import ForumPostDetailPage from './pages/ForumPostDetailPage';
 // Protect routes that require authentication
 const ProtectedRoute = ({children}) => {
     const {isAuthenticated, user} = useAuthStore();
+    const location = useLocation();
+
     if (!isAuthenticated){
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
     if (!user.isVerified){
@@ -76,12 +78,18 @@ const AdminRoute = ({children}) => {
     return children;
 };
 
-// Redirect authenticated user to the home page
+// Auth pages should never be used as a "return to" destination
+const AUTH_ONLY_PATHS = ['/login', '/signup', '/verify-email', '/forgot-password'];
+
+// Redirect authenticated user back to where they came from (or home)
 const RedirectAuthenticatedUser = ({children}) => {
     const {isAuthenticated, user} = useAuthStore();
+    const location = useLocation();
 
     if (isAuthenticated && user.isVerified){
-        return <Navigate to="/" replace />;
+        const from = location.state?.from?.pathname;
+        const target = from && !AUTH_ONLY_PATHS.includes(from) ? from : "/";
+        return <Navigate to={target} replace />;
     }
 
     return children;

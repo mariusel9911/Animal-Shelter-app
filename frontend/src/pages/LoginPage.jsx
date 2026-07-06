@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Loader, Lock, Mail } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import PeekingCats from "../components/PeekingCats";
 import toast from "react-hot-toast";
@@ -26,11 +26,14 @@ const LoginPage = () => {
     const [password, setPassword] = useState("");
 
     const navigate = useNavigate();
+    const location = useLocation();
     const { login, isLoading, error, checkAuth } = useAuthStore();
 
     const handleLogin = async (e) => {
         e.preventDefault();
         await login(email, password);
+        const from = location.state?.from?.pathname || "/";
+        navigate(from, { replace: true });
     };
 
     const handleGoogleLogin = () => {

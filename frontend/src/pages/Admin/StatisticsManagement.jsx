@@ -70,7 +70,7 @@ const StatisticsManagement = () => {
     const { adoptions, getAllAdoptions } = useAdoptionStore();
 
     const [selectedPetType,      setSelectedPetType]      = useState('all');
-    const [predictionViewMode,   setPredictionViewMode]   = useState('daily');
+    const [predictionViewMode,   setPredictionViewMode]   = useState('weekly');
     const [predictionData,       setPredictionData]       = useState(null);
     const [isPredictionLoading,  setIsPredictionLoading]  = useState(false);
     const [predictionError,      setPredictionError]      = useState(null);
