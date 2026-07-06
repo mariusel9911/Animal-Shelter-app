@@ -29,16 +29,18 @@ export const startConversation = async (req, res) => {
         let conversationId;
         if (convResult.rows.length > 0) {
             conversationId = convResult.rows[0].id;
-            // Only clear the SENDER's deletion state — never touch the other participant's
+            // Only clear the SENDER's "hidden from list" flag — never touch the other
+            // participant's. Keep deleted_at_* intact: it acts as a permanent history
+            // cutoff so old messages stay hidden even after the conversation is reactivated.
             const existingConv = convResult.rows[0];
             if (existingConv.participant_one === sender_id) {
                 await pool.query(
-                    `UPDATE conversations SET deleted_by_one=false, deleted_at_one=NULL WHERE id=$1`,
+                    `UPDATE conversations SET deleted_by_one=false WHERE id=$1`,
                     [conversationId]
                 );
             } else {
                 await pool.query(
-                    `UPDATE conversations SET deleted_by_two=false, deleted_at_two=NULL WHERE id=$1`,
+                    `UPDATE conversations SET deleted_by_two=false WHERE id=$1`,
                     [conversationId]
                 );
             }
@@ -93,8 +95,8 @@ export const getConversations = async (req, res) => {
              LATERAL (
                  SELECT
                      CASE
-                         WHEN c.participant_one=$1 AND c.deleted_by_one=true THEN c.deleted_at_one
-                         WHEN c.participant_two=$1 AND c.deleted_by_two=true THEN c.deleted_at_two
+                         WHEN c.participant_one=$1 THEN c.deleted_at_one
+                         WHEN c.participant_two=$1 THEN c.deleted_at_two
                          ELSE NULL
                      END AS ts,
                      CASE
@@ -149,11 +151,13 @@ export const getMessages = async (req, res) => {
 
         const conv = convCheck.rows[0];
 
-        // Determine from which point this user can see messages (based on when they deleted)
+        // Determine from which point this user can see messages (based on when they last
+        // cleared the conversation — this cutoff persists even after reactivation via a
+        // new adoption request, so old messages stay hidden).
         let cutoffTime = null;
-        if (conv.participant_one === userId && conv.deleted_by_one && conv.deleted_at_one) {
+        if (conv.participant_one === userId && conv.deleted_at_one) {
             cutoffTime = conv.deleted_at_one;
-        } else if (conv.participant_two === userId && conv.deleted_by_two && conv.deleted_at_two) {
+        } else if (conv.participant_two === userId && conv.deleted_at_two) {
             cutoffTime = conv.deleted_at_two;
         }
 
@@ -232,7 +236,7 @@ export const sendMessage = async (req, res) => {
                AND created_at > COALESCE(
                    (SELECT MAX(created_at) FROM conversation_messages
                     WHERE conversation_id = $1 AND sender_id = $3 AND id != $5),
-                   $4 - INTERVAL '7 days'
+                   $4::timestamptz - INTERVAL '7 days'
                )`,
             [id, otherUserId, userId, newMsgCreatedAt, newMsgId]
         );
@@ -288,10 +292,8 @@ export const getUnreadCount = async (req, res) => {
              JOIN conversations c ON c.id=cm.conversation_id
              WHERE (c.participant_one=$1 OR c.participant_two=$1)
                AND cm.sender_id!=$1 AND cm.is_read=false
-               AND NOT (c.participant_one=$1 AND c.deleted_by_one=true AND
-                        (c.deleted_at_one IS NULL OR cm.created_at <= c.deleted_at_one))
-               AND NOT (c.participant_two=$1 AND c.deleted_by_two=true AND
-                        (c.deleted_at_two IS NULL OR cm.created_at <= c.deleted_at_two))`,
+               AND NOT (c.participant_one=$1 AND c.deleted_at_one IS NOT NULL AND cm.created_at <= c.deleted_at_one)
+               AND NOT (c.participant_two=$1 AND c.deleted_at_two IS NOT NULL AND cm.created_at <= c.deleted_at_two)`,
             [req.userId]
         );
         res.json({ success: true, count: parseInt(result.rows[0].count) || 0 });
